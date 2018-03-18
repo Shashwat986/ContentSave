@@ -29,7 +29,7 @@ def get_headless_html(url, wait=2):
   driver = webdriver.Chrome(chrome_options=options)
   driver.get(url)
   driver.implicitly_wait(wait)
-  src = driver.page_source()
+  src = driver.page_source
   driver.quit()
 
   return parse_html(src)

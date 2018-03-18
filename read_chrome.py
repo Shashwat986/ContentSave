@@ -12,7 +12,7 @@ def from_google_time(time):
   epoch = (time/1_000_000) - (datetime(1970, 1, 1) - datetime(1601, 1, 1)).total_seconds()
   return epoch
 
-def get_links(start_time = None, limit = 10, offset = 0, history_file_path = None, ascending = False):
+def get_links(start_time = None, limit = 5, offset = 0, history_file_path = None, ascending = True):
   if history_file_path is None:
     # TODO: Make this OS-Specific
     history_file_path = os.path.expanduser('~/Library/Application Support/Google/Chrome/Default/History')
@@ -30,11 +30,11 @@ def get_links(start_time = None, limit = 10, offset = 0, history_file_path = Non
 
   print ('--- Query')
   if start_time is None:
-    start_time = datetime.now() - timedelta(1)
+    start_time = (datetime.now() - timedelta(1)).timestamp()
   elif type(start_time) is datetime:
     start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
 
-  print ('Select at most {} visits after {}'.format(limit, start_time))
+  print ('Select at most {} visits after {}'.format(limit, datetime.utcfromtimestamp(start_time)))
 
   cur = conn.execute("SELECT COUNT(*) FROM urls WHERE last_visit_time > {}".format(to_google_time(start_time)))
   print("{} total entries".format(cur.fetchall()[0][0]))
