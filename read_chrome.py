@@ -5,8 +5,12 @@ from tempfile import NamedTemporaryFile
 from shutil import copyfile
 from datetime import datetime, timedelta
 
-def to_google_time(time):
-  return (time - datetime(1601, 1, 1)).total_seconds() * 1_000_000
+def to_google_time(timestamp):
+  return (datetime.utcfromtimestamp(timestamp) - datetime(1601, 1, 1)).total_seconds() * 1_000_000
+
+def from_google_time(time):
+  epoch = (time/1_000_000) - (datetime(1970, 1, 1) - datetime(1601, 1, 1)).total_seconds()
+  return epoch
 
 def get_links(start_time = None, limit = 10, offset = 0, history_file_path = None, ascending = False):
   if history_file_path is None:
@@ -27,6 +31,8 @@ def get_links(start_time = None, limit = 10, offset = 0, history_file_path = Non
   print ('--- Query')
   if start_time is None:
     start_time = datetime.now() - timedelta(1)
+  elif type(start_time) is datetime:
+    start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
 
   print ('Select at most {} visits after {}'.format(limit, start_time))
 
@@ -35,16 +41,19 @@ def get_links(start_time = None, limit = 10, offset = 0, history_file_path = Non
   print()
 
   rows = []
-  cur = conn.execute("""
-  SELECT url, title, datetime(last_visit_time / 1000000 + (strftime('%s', '1601-01-01')), 'unixepoch') AS t
+  for row in conn.execute("""
+  SELECT url, title, last_visit_time
   FROM urls
   WHERE last_visit_time > {time}
   ORDER BY last_visit_time {dir}
   LIMIT {limit} OFFSET {offset}
   """.format(time=to_google_time(start_time), limit=limit, offset=offset, dir=("ASC" if ascending else "DESC"))):
     print (row)
-    rows.append(dict(zip(["url", "title", "time"], row)))
-
+    rows.append({
+      "url": row[0],
+      "title":row[1],
+      "time": from_google_time(row[2])
+    })
 
   print ("--- Finishing")
   conn.close()
