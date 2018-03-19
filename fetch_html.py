@@ -1,9 +1,11 @@
 from bs4 import BeautifulSoup as BS
 import requests
 from selenium import webdriver
+from selenium.common.exceptions import WebDriverException
 
 options = webdriver.ChromeOptions()
 options.add_argument('headless')
+options.add_argument("--mute-audio")
 
 def parse_html(text):
   soup = BS(text, "html5lib")
@@ -16,6 +18,7 @@ def parse_html(text):
     if tag.string is not None:
       tag.string = ' ' + tag.string + ' '
 
+  # TODO: Fetch and add metadata also
   return " ".join(soup.get_text().strip().split())
 
 def get_html(url):
@@ -26,7 +29,19 @@ def get_html(url):
   return parse_html(r.text)
 
 def get_headless_html(url, wait=2):
-  driver = webdriver.Chrome(chrome_options=options)
+  try:
+    driver = webdriver.Chrome(chrome_options=options)
+  except (FileNotFoundError, WebDriverException):
+    # ChromeDriver is not available
+    print ("""
+    For best results, please install ChromeDriver
+
+      $ brew install chromedriver
+
+    Reverting to Requests, which will not load dynamic content.
+    """)
+    return get_html(url)
+
   driver.get(url)
   driver.implicitly_wait(wait)
   src = driver.page_source

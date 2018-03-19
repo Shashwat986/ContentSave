@@ -46,8 +46,8 @@ def get_links(start_time = None, limit = 5, offset = 0, history_file_path = None
   FROM urls
   WHERE last_visit_time > {time}
   ORDER BY last_visit_time {dir}
-  LIMIT {limit} OFFSET {offset}
-  """.format(time=to_google_time(start_time), limit=limit, offset=offset, dir=("ASC" if ascending else "DESC"))):
+  {limit} OFFSET {offset}
+  """.format(time=to_google_time(start_time), limit=("LIMIT {}".format(limit) if limit > 0 else ""), offset=offset, dir=("ASC" if ascending else "DESC"))):
     print (row)
     rows.append({
       "url": row[0],
