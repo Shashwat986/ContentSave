@@ -18,8 +18,28 @@ def parse_html(text):
     if tag.string is not None:
       tag.string = ' ' + tag.string + ' '
 
-  # TODO: Fetch and add metadata also
-  return " ".join(soup.get_text().strip().split())
+  body = " ".join(soup.get_text().strip().split())
+
+  description = None
+  if soup.find('meta', property="og:description"):
+    description = soup.find('meta', property="og:description")['content']
+
+  keywords = None
+  if soup.find('meta', attrs={"name":"keywords"}):
+    keywords = soup.find('meta', attrs={"name":"keywords"})['content']
+
+  title = None
+  if soup.find('title'):
+    title = soup.find('title').string
+  if soup.find('meta', property="og:title"):
+    title = soup.find('meta', property="og:title")['content']
+
+  return {
+    'body': body,
+    'meta:description': description,
+    'meta:keywords': keywords,
+    'title': title
+  }
 
 def get_html(url):
   r = requests.get(url)

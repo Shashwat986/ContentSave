@@ -30,6 +30,7 @@ def get_links(start_time = None, limit = 5, offset = 0, history_file_path = None
 
   print ('--- Query')
   if start_time is None:
+    # FIXME
     start_time = (datetime.now() - timedelta(1)).timestamp()
   elif type(start_time) is datetime:
     start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
@@ -52,7 +53,8 @@ def get_links(start_time = None, limit = 5, offset = 0, history_file_path = None
     rows.append({
       "url": row[0],
       "title":row[1],
-      "time": from_google_time(row[2])
+      "time": from_google_time(row[2]),
+      "datetime": datetime.utcfromtimestamp(from_google_time(row[2]))
     })
 
   print ("--- Finishing")

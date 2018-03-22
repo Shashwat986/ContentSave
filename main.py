@@ -1,6 +1,7 @@
-from read_chrome import get_links, from_google_time
+from read_chrome import get_links
 from fetch_html import get_headless_html
-from parse_html import *
+from parse_html import update_databases, calculate_tfidf
+from metadata import get_metadata
 from model import redis_client
 
 def fetch_and_parse_links(limit=5):
@@ -15,9 +16,9 @@ def fetch_and_parse_links(limit=5):
   count = 0
   for link in get_links(fetched, limit):
     print ("--- Fetching {}".format(link['url']))
-    html = get_headless_html(link['url'])
+    url_object = get_headless_html(link['url'])
     print ("--- Updating TF-IDF Values")
-    update_tfidf(html, link['url'])
+    update_databases(url_object, link)
     redis_client.set('last_fetch_time', link['time'])
     count += 1
 
@@ -26,12 +27,7 @@ def fetch_and_parse_links(limit=5):
 def fetch_tfidf(url):
   print (sorted(calculate_tfidf(url).items(), key=lambda x: -x[1])[0:50])
 
-def get_metadata():
-  print ("Total URLs processed:", redis_client.hlen('url:hash'))
-  print ("Vocabulary Size:", redis_client.zcard('doc:all'))
-  print ("Most frequent domains:", ", ".join(map(lambda x: x.decode('ascii'), redis_client.zrevrange("url:domain", 0, 4))))
-
 if __name__ == "__main__":
   #fetch_tfidf("http://docs.peewee-orm.com/en/latest/peewee/models.html")
-  fetch_and_parse_links(16)
+  fetch_and_parse_links(40)
   get_metadata()
