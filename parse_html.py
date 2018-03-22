@@ -39,12 +39,20 @@ def update_tfidf(html_object, rowid):
 
   return True
 
-def update_databases(html_object, link_object):
+def update_url_index(html_object, rowid):
+  pass
+
+def update_es(html_object, rowid):
+  pass
+
+def update_databases(html_object, link_object, force=False):
   new_element, rowid = update_content(link_object)
 
-  if not new_element: return False
+  if not new_element and not force: return False
 
-  return update_tfidf(html_object, rowid)
+  update_url_index(html_object, rowid)
+  update_es(html_object, rowid)
+  update_tfidf(html_object, rowid)
 
 def calculate_tfidf(url):
   try:

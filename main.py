@@ -21,6 +21,7 @@ def fetch_and_parse_links(limit=5):
     update_databases(url_object, link)
     redis_client.set('last_fetch_time', link['time'])
     count += 1
+    print ("---- {} processed so far".format(count))
 
   return count
 
@@ -29,5 +30,5 @@ def fetch_tfidf(url):
 
 if __name__ == "__main__":
   #fetch_tfidf("http://docs.peewee-orm.com/en/latest/peewee/models.html")
-  fetch_and_parse_links(40)
+  fetch_and_parse_links(4)
   get_metadata()

@@ -1,7 +1,6 @@
 import sqlite3
 import os
 import sys
-from tempfile import NamedTemporaryFile
 from shutil import copyfile
 from datetime import datetime, timedelta
 
@@ -12,28 +11,30 @@ def from_google_time(time):
   epoch = (time/1_000_000) - (datetime(1970, 1, 1) - datetime(1601, 1, 1)).total_seconds()
   return epoch
 
-def get_links(start_time = None, limit = 5, offset = 0, history_file_path = None, ascending = True):
+def get_links(start_time = None, limit = 5, offset = 0, history_file_path = None, ascending = True, force_copy = False):
+  if start_time is None:
+    # If there is no start_time provided, defaults to 1 year ago
+    start_time = (datetime.now() - timedelta(365)).timestamp()
+  elif type(start_time) is datetime:
+    start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
+
   if history_file_path is None:
     # TODO: Make this OS-Specific
     history_file_path = os.path.expanduser('~/Library/Application Support/Google/Chrome/Default/History')
 
   if not os.path.isfile(history_file_path):
     raise IOError("File doesn't exist")
-    sys.exit(1)
 
-  print ("--- Copying DB file")
-  tf = NamedTemporaryFile(delete=False)
-  copyfile(history_file_path, tf.name)
+  tf_name = os.path.relpath('db/chrome.db')
+
+  if force_copy or (not os.path.isfile(tf_name)) or (os.path.getmtime(tf_name) < start_time):
+    print ("--- Copying DB file")
+    copyfile(history_file_path, tf_name)
 
   print ("--- Creating DB Connection")
-  conn = sqlite3.connect(tf.name)
+  conn = sqlite3.connect(tf_name)
 
   print ('--- Query')
-  if start_time is None:
-    # FIXME
-    start_time = (datetime.now() - timedelta(1)).timestamp()
-  elif type(start_time) is datetime:
-    start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
 
   print ('Select at most {} visits after {}'.format(limit, datetime.utcfromtimestamp(start_time)))
 
@@ -59,7 +60,5 @@ def get_links(start_time = None, limit = 5, offset = 0, history_file_path = None
 
   print ("--- Finishing")
   conn.close()
-  tf.close()
-  os.remove(tf.name)
 
   return rows
