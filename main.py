@@ -16,7 +16,7 @@ def fetch_and_parse_links(limit=5):
 
   count = 0
   for link in get_links(fetched, limit):
-    logging.debug("Fetching {}".format(link['url']))
+    logging.info("Fetching {}".format(link['url']))
     url_object = get_headless_html(link['url'])
 
     logging.debug("Updating DB Values")
@@ -24,7 +24,7 @@ def fetch_and_parse_links(limit=5):
 
     redis_client.set('last_fetch_time', link['time'])
     count += 1
-    print("{:>5} processed so far".format(count), end="\r")
+    logging.info("{:>5} processed so far".format(count), end="\r")
 
   return count
 
@@ -32,6 +32,7 @@ def fetch_tfidf(url):
   print (sorted(calculate_tfidf(url).items(), key=lambda x: -x[1])[0:50])
 
 if __name__ == "__main__":
+  logging.basicConfig(level=logging.INFO)
   #fetch_tfidf("http://docs.peewee-orm.com/en/latest/peewee/models.html")
-  fetch_and_parse_links(4)
+  fetch_and_parse_links(40)
   get_metadata()
