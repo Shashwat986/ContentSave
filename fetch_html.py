@@ -1,3 +1,4 @@
+import logging
 from bs4 import BeautifulSoup as BS
 import requests
 from selenium import webdriver
@@ -44,7 +45,7 @@ def parse_html(text):
 def get_html(url):
   r = requests.get(url)
   if r.status_code != 200:
-    raise Exception("Error with reading url")
+    logging.warning("Status Code was not 200 for {}.".format(url))
 
   return parse_html(r.text)
 
@@ -53,7 +54,7 @@ def get_headless_html(url, wait=2):
     driver = webdriver.Chrome(chrome_options=options)
   except (FileNotFoundError, WebDriverException):
     # ChromeDriver is not available
-    print ("""
+    logging.warning ("""
     For best results, please install ChromeDriver
 
       $ brew install chromedriver
@@ -62,10 +63,12 @@ def get_headless_html(url, wait=2):
     """)
     return get_html(url)
 
+  logging.debug("Starting Selenium processing of {}".format(url))
   driver.get(url)
   driver.implicitly_wait(wait)
   src = driver.page_source
   driver.quit()
+  logging.debug("Finished Selenium processing of {}".format(url))
 
   return parse_html(src)
 

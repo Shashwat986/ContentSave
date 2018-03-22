@@ -1,3 +1,4 @@
+import logging
 from read_chrome import get_links
 from fetch_html import get_headless_html
 from parse_html import update_databases, calculate_tfidf
@@ -15,13 +16,15 @@ def fetch_and_parse_links(limit=5):
 
   count = 0
   for link in get_links(fetched, limit):
-    print ("--- Fetching {}".format(link['url']))
+    logging.debug("Fetching {}".format(link['url']))
     url_object = get_headless_html(link['url'])
-    print ("--- Updating TF-IDF Values")
+
+    logging.debug("Updating DB Values")
     update_databases(url_object, link)
+
     redis_client.set('last_fetch_time', link['time'])
     count += 1
-    print ("---- {} processed so far".format(count))
+    print("{:>5} processed so far".format(count), end="\r")
 
   return count
 
