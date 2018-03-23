@@ -1,8 +1,18 @@
 import logging
+import socket
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup as BS
 import requests
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+
+class Status:
+  NO_CONNECTION = 0
+  URL_INCORRECT = 1
+  ALL_OK        = 2
+
+  def __init__(self, status):
+    self.status = status
 
 options = webdriver.ChromeOptions()
 options.add_argument('headless')
@@ -42,7 +52,32 @@ def parse_html(text):
     'title': title
   }
 
+def check_url(url):
+  status = Status(Status.NO_CONNECTION)
+  try:
+    socket.create_connection(("www.google.com", 80))
+    status = Status(Status.URL_INCORRECT)
+
+    socket.create_connection((urlparse(url).netloc, 80))
+    assert requests.head(url).status_code < 400
+    status = Status(Status.ALL_OK)
+
+    return status
+  except (AssertionError, OSError) as e:
+    logging.info("Unable to find URL {}. Error:".format(url))
+    logging.info(e)
+    return status
+  except Exception as e:
+    logging.exception("Unknown Error")
+    return status
+
+  return status
+
 def get_html(url):
+  status = check_url(url)
+  if status.status != Status.ALL_OK:
+    return status
+
   r = requests.get(url)
   if r.status_code != 200:
     logging.warning("Status Code was not 200 for {}.".format(url))
@@ -62,6 +97,10 @@ def get_headless_html(url, wait=2):
     Reverting to Requests, which will not load dynamic content.
     """)
     return get_html(url)
+
+  status = check_url(url)
+  if status.status != Status.ALL_OK:
+    return status
 
   logging.debug("Starting Selenium processing of {}".format(url))
   driver.get(url)

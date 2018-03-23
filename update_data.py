@@ -50,6 +50,9 @@ def update_es(html_object, rowid):
   pass
 
 def update_databases(html_object, link_object, force=False):
+  if html_object is None:
+    return False
+
   new_element, rowid = update_content(link_object)
 
   if not new_element and not force:
