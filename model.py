@@ -1,10 +1,23 @@
+import logging
 import redis
+from redis.exceptions import ConnectionError
 from peewee import Model, CharField, DateTimeField, IntegerField
 from playhouse.sqlite_ext import SqliteExtDatabase, FTSModel, RowIDField, SearchField
 
 redis_client = redis.StrictRedis(host='localhost', port=6381, db=0)
 
 sqlite_db = SqliteExtDatabase('db/sqlite.db')
+
+def test_connections():
+  try:
+    redis_client.ping()
+  except ConnectionError:
+    logging.exception("Redis connection failed")
+    return False
+
+  # TODO
+
+  return True
 
 class Url(Model):
   class Meta:

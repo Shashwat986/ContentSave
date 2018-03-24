@@ -4,29 +4,35 @@ from urllib.parse import urlparse
 from model import redis_client
 from model import Url, UrlIndex
 
-def update_content(link_object):
-  url = link_object['url']
+def check_link_exists(url):
   logging.info("Updating SQLite entry for {}".format(url))
 
   q = Url.select().where(Url.url == url)
 
   # If an entry exists
   if len(q) > 0:
-    # FIXME: http://docs.peewee-orm.com/en/latest/peewee/querying.html#atomic-updates
     m = q[0]
-    m.visit_count += 1
-    m.last_visit_time = link_object['datetime']
-    m.save()
-    return False, m.rowid
+    return True, m.rowid
+  return False, None
 
-  m = Url.create(
-    url=url,
-    domain=urlparse(url).netloc,
-    visit_count=1,
-    last_visit_time=link_object['datetime']
-  )
+def update_content(link_object):
+  exists, rowid = check_link_exists(link_object['url'])
+  if exists:
+    Url.update(
+      visit_count = Url.visit_count + 1,
+      last_visit_time = link_object['datetime']
+    ).where(Url.url == link_object['url']).execute()
+  else:
+    m = Url.create(
+      url = url,
+      domain = urlparse(url).netloc,
+      visit_count = 1,
+      last_visit_time = link_object['datetime']
+    )
 
-  return True, m.rowid
+    rowid = m.rowid
+
+  return (not exists), rowid
 
 def update_tfidf(html_object, rowid):
   logging.info("Updating TF-IDF values in Redis")
