@@ -1,0 +1,17 @@
+[2018-03-24T11:30:11.322+0000][66064][gc] Using Concurrent Mark Sweep
+[2018-03-24T11:30:11.322+0000][66064][gc,heap,coops] Heap address: 0x0000000780000000, size: 1024 MB, Compressed Oops mode: Zero based, Oop shift amount: 3
+[2018-03-24T11:30:11.435+0000][66064][safepoint    ] Application time: 0.0022123 seconds
+[2018-03-24T11:30:11.435+0000][66064][safepoint    ] Total time for which application threads were stopped: 0.0000703 seconds, Stopping threads took: 0.0000105 seconds
+[2018-03-24T11:30:11.585+0000][66064][safepoint    ] Application time: 0.1494285 seconds
+[2018-03-24T11:30:11.585+0000][66064][safepoint    ] Total time for which application threads were stopped: 0.0000832 seconds, Stopping threads took: 0.0000123 seconds
+[2018-03-24T11:30:11.679+0000][66064][safepoint    ] Application time: 0.0941495 seconds
+[2018-03-24T11:30:11.679+0000][66064][safepoint    ] Total time for which application threads were stopped: 0.0000797 seconds, Stopping threads took: 0.0000111 seconds
+[2018-03-24T11:30:11.781+0000][66064][gc,heap,exit ] Heap
+[2018-03-24T11:30:11.781+0000][66064][gc,heap,exit ]  par new generation   total 306688K, used 32725K [0x0000000780000000, 0x0000000794cc0000, 0x0000000794cc0000)
+[2018-03-24T11:30:11.781+0000][66064][gc,heap,exit ]   eden space 272640K,  12% used [0x0000000780000000, 0x0000000781ff5508, 0x0000000790a40000)
+[2018-03-24T11:30:11.781+0000][66064][gc,heap,exit ]   from space 34048K,   0% used [0x0000000790a40000, 0x0000000790a40000, 0x0000000792b80000)
+[2018-03-24T11:30:11.781+0000][66064][gc,heap,exit ]   to   space 34048K,   0% used [0x0000000792b80000, 0x0000000792b80000, 0x0000000794cc0000)
+[2018-03-24T11:30:11.781+0000][66064][gc,heap,exit ]  concurrent mark-sweep generation total 707840K, used 0K [0x0000000794cc0000, 0x00000007c0000000, 0x00000007c0000000)
+[2018-03-24T11:30:11.781+0000][66064][gc,heap,exit ]  Metaspace       used 8508K, capacity 8722K, committed 8832K, reserved 1056768K
+[2018-03-24T11:30:11.781+0000][66064][gc,heap,exit ]   class space    used 805K, capacity 843K, committed 896K, reserved 1048576K
+[2018-03-24T11:30:11.781+0000][66064][safepoint    ] Application time: 0.1021001 seconds

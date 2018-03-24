@@ -1,0 +1,19 @@
+[2018-03-24T11:36:09.679+0000][71744][gc] Using Concurrent Mark Sweep
+[2018-03-24T11:36:09.679+0000][71744][gc,heap,coops] Heap address: 0x0000000780000000, size: 1024 MB, Compressed Oops mode: Zero based, Oop shift amount: 3
+[2018-03-24T11:36:09.796+0000][71744][safepoint    ] Application time: 0.0021906 seconds
+[2018-03-24T11:36:09.796+0000][71744][safepoint    ] Total time for which application threads were stopped: 0.0000668 seconds, Stopping threads took: 0.0000102 seconds
+[2018-03-24T11:36:09.940+0000][71744][safepoint    ] Application time: 0.1443061 seconds
+[2018-03-24T11:36:09.941+0000][71744][safepoint    ] Total time for which application threads were stopped: 0.0000885 seconds, Stopping threads took: 0.0000124 seconds
+[2018-03-24T11:36:09.984+0000][71744][safepoint    ] Application time: 0.0437371 seconds
+[2018-03-24T11:36:09.985+0000][71744][safepoint    ] Total time for which application threads were stopped: 0.0001997 seconds, Stopping threads took: 0.0000343 seconds
+[2018-03-24T11:36:10.045+0000][71744][safepoint    ] Application time: 0.0608147 seconds
+[2018-03-24T11:36:10.046+0000][71744][safepoint    ] Total time for which application threads were stopped: 0.0000935 seconds, Stopping threads took: 0.0000123 seconds
+[2018-03-24T11:36:10.066+0000][71744][gc,heap,exit ] Heap
+[2018-03-24T11:36:10.066+0000][71744][gc,heap,exit ]  par new generation   total 306688K, used 21819K [0x0000000780000000, 0x0000000794cc0000, 0x0000000794cc0000)
+[2018-03-24T11:36:10.066+0000][71744][gc,heap,exit ]   eden space 272640K,   8% used [0x0000000780000000, 0x000000078154ed28, 0x0000000790a40000)
+[2018-03-24T11:36:10.066+0000][71744][gc,heap,exit ]   from space 34048K,   0% used [0x0000000790a40000, 0x0000000790a40000, 0x0000000792b80000)
+[2018-03-24T11:36:10.066+0000][71744][gc,heap,exit ]   to   space 34048K,   0% used [0x0000000792b80000, 0x0000000792b80000, 0x0000000794cc0000)
+[2018-03-24T11:36:10.066+0000][71744][gc,heap,exit ]  concurrent mark-sweep generation total 707840K, used 0K [0x0000000794cc0000, 0x00000007c0000000, 0x00000007c0000000)
+[2018-03-24T11:36:10.066+0000][71744][gc,heap,exit ]  Metaspace       used 8639K, capacity 8834K, committed 9088K, reserved 1056768K
+[2018-03-24T11:36:10.066+0000][71744][gc,heap,exit ]   class space    used 824K, capacity 879K, committed 896K, reserved 1048576K
+[2018-03-24T11:36:10.066+0000][71744][safepoint    ] Application time: 0.0203956 seconds

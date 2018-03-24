@@ -42,6 +42,6 @@ def fetch_tfidf(url):
 if __name__ == "__main__":
   logging.basicConfig(level=logging.INFO)
   #fetch_tfidf("http://docs.peewee-orm.com/en/latest/peewee/models.html")
-  count = fetch_and_parse_links(1)
+  count = fetch_and_parse_links(40)
   print ("URLs Processed: ", count)
   get_metadata()

@@ -1,5 +1,5 @@
 import redis
-from peewee import Model, CharField, DateField, IntegerField
+from peewee import Model, CharField, DateTimeField, IntegerField
 from playhouse.sqlite_ext import SqliteExtDatabase, FTSModel, RowIDField, SearchField
 
 redis_client = redis.StrictRedis(host='localhost', port=6381, db=0)
@@ -14,7 +14,7 @@ class Url(Model):
   url = CharField()
   domain = CharField()
   visit_count = IntegerField()
-  last_visit_time = DateField()
+  last_visit_time = DateTimeField()
 
 class UrlIndex(FTSModel):
   class Meta:

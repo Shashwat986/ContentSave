@@ -41,6 +41,7 @@ def get_links(start_time = None, limit = 5, offset = 0,
 
   logging.debug("Creating DB Connection")
   conn = sqlite3.connect(tf_name)
+  conn.row_factory = sqlite3.Row
 
   logging.debug('Running Query')
 
@@ -65,10 +66,10 @@ def get_links(start_time = None, limit = 5, offset = 0,
              dir=("ASC" if ascending else "DESC"))):
     logging.debug(row)
     rows.append({
-      "url": row[0],
-      "title":row[1],
-      "time": from_google_time(row[2]),
-      "datetime": datetime.utcfromtimestamp(from_google_time(row[2]))
+      "url": row['url'],
+      "title":row['title'],
+      "time": from_google_time(row['last_visit_time']),
+      "datetime": datetime.utcfromtimestamp(from_google_time(row['last_visit_time']))
     })
 
   logging.debug("Finishing")
