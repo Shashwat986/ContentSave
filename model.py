@@ -38,6 +38,7 @@ class UrlIndex(FTSModel):
   title = SearchField()
   description = SearchField()
   keywords = SearchField()
+  body = SearchField()
 
 def insert_url(url, **kwargs):
   pass

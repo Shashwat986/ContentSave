@@ -5,8 +5,6 @@ from model import redis_client
 from model import Url, UrlIndex
 
 def check_link_exists(url):
-  logging.info("Updating SQLite entry for {}".format(url))
-
   q = Url.select().where(Url.url == url)
 
   # If an entry exists
@@ -16,6 +14,8 @@ def check_link_exists(url):
   return False, None
 
 def update_content(link_object):
+  logging.info("Updating SQLite entry for {}".format(link_object['url']))
+
   exists, rowid = check_link_exists(link_object['url'])
   if exists:
     Url.update(
@@ -36,6 +36,7 @@ def update_content(link_object):
 
 def update_tfidf(html_object, rowid):
   logging.info("Updating TF-IDF values in Redis")
+
   doc = html_object['body']
 
   #url = html_object['url']
@@ -50,7 +51,26 @@ def update_tfidf(html_object, rowid):
   return True
 
 def update_url_index(html_object, rowid):
-  pass
+  logging.info("Updating SQLite Index entry for row {}".format(rowid))
+
+  m = UrlIndex.select().where(UrlIndex.rowid == rowid).first()
+  if m is None:
+    UrlIndex.create(
+      rowid=rowid,
+      title=html_object['title'],
+      description=html_object['meta:description'],
+      keywords=html_object['meta:keywords'],
+      body=html_object['body']
+    )
+  else:
+    UrlIndex.update(
+      title=html_object['title'],
+      description=html_object['meta:description'],
+      keywords=html_object['meta:keywords'],
+      body=html_object['body']
+    ).where(UrlIndex.rowid == rowid).execute()
+
+  return True
 
 def update_es(html_object, rowid):
   pass

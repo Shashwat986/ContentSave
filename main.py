@@ -54,6 +54,6 @@ if __name__ == "__main__":
     exit(1)
 
   #fetch_tfidf("http://docs.peewee-orm.com/en/latest/peewee/models.html")
-  count = fetch_and_parse_links(4)
+  count = fetch_and_parse_links(1, True)
   print ("URLs Processed: ", count)
   #get_metadata()
