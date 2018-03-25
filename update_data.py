@@ -17,12 +17,14 @@ def check_link_exists(url):
 def update_content(link_object):
   logging.info("Updating SQLite entry for {}".format(link_object['url']))
 
+  url = link_object['url']
+
   exists, rowid = check_link_exists(link_object['url'])
   if exists:
     Url.update(
       visit_count = Url.visit_count + 1,
       last_visit_time = link_object['datetime']
-    ).where(Url.url == link_object['url']).execute()
+    ).where(Url.url == url).execute()
   else:
     m = Url.create(
       url = url,
@@ -68,22 +70,27 @@ def update_url_index(html_object, rowid):
 
   return True
 
-def update_es(html_object, link_object, rowid):
+def update_es(html_object, rowid):
   m = ESUrl.get(id=rowid, ignore=404)
   if not m:
     m = ESUrl(meta={"id": rowid})
-    m.url = link_object['url']
 
-  for key, value in html_object.items():
-    setattr(m, key, value)
-
-  # score = calculate_tfidf(rowid=rowid)
-  # score = dict([[str(k, 'utf-8'), v] for k,v in score.items()])
-  # m.tfidf = score
+  m.body = html_object['body']
 
   m.save()
 
-def update_databases(html_object, link_object, force=False):
+def update_es_tfidf(rowid):
+  m = ESUrl.get(id=rowid, ignore=404)
+  if not m:
+    logging.error("Body doesn't exist. Can't store TFIDF values")
+    return None
+
+  m.tfidf = " ".join(calculate_tfidf(rowid=rowid).keys())
+  m.save()
+
+  return m
+
+def update_databases(html_object, link_object, force=False, b_update_tfidf=False):
   if html_object is None:
     return False
 
@@ -95,9 +102,12 @@ def update_databases(html_object, link_object, force=False):
 
   update_url_index(html_object, rowid)
   update_tfidf(html_object, rowid)
-  update_es(html_object, link_object, rowid)
+  update_es(html_object, rowid)
 
-def calculate_tfidf(url = None, rowid = None, limit = 100):
+  if b_update_tfidf:
+    update_es_tfidf(rowid)
+
+def calculate_tfidf(url = None, rowid = None, limit = None):
   if url is not None:
     try:
       rowid = Url.select().where(Url.url == url)[0].rowid
@@ -105,8 +115,12 @@ def calculate_tfidf(url = None, rowid = None, limit = 100):
       logging.warning("No entry exists for {}".format(url))
       return {}
   if rowid is None:
-    logging.warning("No entry requested")
+    logging.warning("No entry requested. Must have either url or rowid.")
     return {}
+
+  if limit is None:
+    # Dynamically set limit to 20%
+    limit = int(redis_client.zcard("doc:{}".format(rowid)) / 5)
 
   tfidf = {}
   for word, score in redis_client.zrevrange("doc:{}".format(rowid), 0, -1, withscores=True):
@@ -119,7 +133,6 @@ def calculate_tfidf(url = None, rowid = None, limit = 100):
     if doc_score == 0:
       logging.error("Why is there a 0 score for the word {}?".format(word))
     else:
-      tfidf[word] = float(score) / doc_score
+      tfidf[str(word, 'utf-8')] = float(score) / doc_score
 
   return dict(sorted(tfidf.items(), key=lambda x: -x[1])[0:limit])
-

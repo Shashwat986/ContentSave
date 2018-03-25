@@ -31,25 +31,25 @@ def parse_html(text):
       tag.string = ' ' + tag.string + ' '
 
   body = " ".join(soup.get_text().strip().split())
-  body = re.sub('[^A-Za-z0-9 ]+', '', body).lower()
+  body = re.sub('[^A-Za-z0-9 ]+', ' ', body).lower()
 
   description = None
   if soup.find('meta', property="og:description"):
     description = soup.find('meta', property="og:description")['content']
-    body += " " + re.sub('[^A-Za-z0-9 ]+', '', description).lower()
+    body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', description).lower()
 
   keywords = None
   if soup.find('meta', attrs={"name":"keywords"}):
     keywords = soup.find('meta', attrs={"name":"keywords"})['content']
-    body += " " + re.sub('[^A-Za-z0-9 ]+', '', keywords).lower()
+    body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', keywords).lower()
 
   title = None
   if soup.find('title'):
     title = soup.find('title').string
-    body += " " + re.sub('[^A-Za-z0-9 ]+', '', title).lower()
+    body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', title).lower()
   if soup.find('meta', property="og:title"):
     title = soup.find('meta', property="og:title")['content']
-    body += " " + re.sub('[^A-Za-z0-9 ]+', '', title).lower()
+    body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', title).lower()
 
   return {
     'body': body,

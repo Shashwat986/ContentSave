@@ -2,7 +2,7 @@ import logging
 from read_chrome import get_links
 from fetch_html import get_headless_html, Status
 from update_data import update_databases, calculate_tfidf, check_link_exists
-from metadata import get_metadata
+from search import get_metadata
 from model import redis_client, test_connections
 
 def fetch_and_parse_links(limit = 5, force = False):
@@ -34,7 +34,7 @@ def fetch_and_parse_links(limit = 5, force = False):
         logging.info("Unable to fetch URL data. Ignoring this URL")
       else:
         logging.debug("Updating DB Values")
-        update_databases(url_object, link, force)
+        update_databases(url_object, link, force, True)
 
     redis_client.set('last_fetch_time', link['time'])
     count += 1
@@ -54,6 +54,6 @@ if __name__ == "__main__":
     exit(1)
 
   #fetch_tfidf("http://docs.peewee-orm.com/en/latest/peewee/models.html")
-  count = fetch_and_parse_links(1, True)
+  count = fetch_and_parse_links(100)
   print ("URLs Processed: ", count)
   #get_metadata()
