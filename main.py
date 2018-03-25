@@ -44,7 +44,7 @@ def fetch_and_parse_links(limit = 5, force = False):
   return count
 
 def fetch_tfidf(url):
-  print (sorted(calculate_tfidf(url).items(), key=lambda x: -x[1])[0:50])
+  print (sorted(calculate_tfidf(url=url).items(), key=lambda x: -x[1])[0:50])
 
 if __name__ == "__main__":
   logging.basicConfig(level=logging.INFO)

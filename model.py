@@ -3,8 +3,16 @@ import redis
 from redis.exceptions import ConnectionError
 from peewee import Model, CharField, DateTimeField, IntegerField
 from playhouse.sqlite_ext import SqliteExtDatabase, FTSModel, RowIDField, SearchField
+from elasticsearch_dsl import connections, DocType, Text
 
 redis_client = redis.StrictRedis(host='localhost', port=6381, db=0)
+
+connections.create_connection(hosts=['localhost'], port=9203)
+
+class ESUrl(DocType):
+  class Meta:
+    index = 'url'
+  url = Text()
 
 sqlite_db = SqliteExtDatabase('db/sqlite.db')
 

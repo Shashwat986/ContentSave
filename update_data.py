@@ -3,6 +3,7 @@ import hashlib
 from urllib.parse import urlparse
 from model import redis_client
 from model import Url, UrlIndex
+from model import ESUrl
 
 def check_link_exists(url):
   q = Url.select().where(Url.url == url)
@@ -46,6 +47,7 @@ def update_tfidf(html_object, rowid):
     pipe = redis_client.pipeline()
     pipe.zincrby("doc:{}".format(rowid), word, 1)
     pipe.zincrby("doc:all", word, 1)
+    pipe.incr("count:doc")
     pipe.execute()
 
   return True
@@ -55,25 +57,31 @@ def update_url_index(html_object, rowid):
 
   m = UrlIndex.select().where(UrlIndex.rowid == rowid).first()
   if m is None:
-    UrlIndex.create(
-      rowid=rowid,
-      title=html_object['title'],
-      description=html_object['meta:description'],
-      keywords=html_object['meta:keywords'],
-      body=html_object['body']
-    )
+    UrlIndex.create(**{
+      **html_object,
+      **{"rowid": rowid}
+    })
   else:
     UrlIndex.update(
-      title=html_object['title'],
-      description=html_object['meta:description'],
-      keywords=html_object['meta:keywords'],
-      body=html_object['body']
+      **html_object
     ).where(UrlIndex.rowid == rowid).execute()
 
   return True
 
-def update_es(html_object, rowid):
-  pass
+def update_es(html_object, link_object, rowid):
+  m = ESUrl.get(id=rowid, ignore=404)
+  if not m:
+    m = ESUrl(meta={"id": rowid})
+    m.url = link_object['url']
+
+  for key, value in html_object.items():
+    setattr(m, key, value)
+
+  # score = calculate_tfidf(rowid=rowid)
+  # score = dict([[str(k, 'utf-8'), v] for k,v in score.items()])
+  # m.tfidf = score
+
+  m.save()
 
 def update_databases(html_object, link_object, force=False):
   if html_object is None:
@@ -86,18 +94,22 @@ def update_databases(html_object, link_object, force=False):
     return False
 
   update_url_index(html_object, rowid)
-  update_es(html_object, rowid)
   update_tfidf(html_object, rowid)
+  update_es(html_object, link_object, rowid)
 
-def calculate_tfidf(url):
-  try:
-    rowid = Url.select().where(Url.url == url)[0].rowid
-  except IndexError:
-    logging.warning("No entry exists for {}".format(url))
+def calculate_tfidf(url = None, rowid = None, limit = 100):
+  if url is not None:
+    try:
+      rowid = Url.select().where(Url.url == url)[0].rowid
+    except IndexError:
+      logging.warning("No entry exists for {}".format(url))
+      return {}
+  if rowid is None:
+    logging.warning("No entry requested")
     return {}
 
   tfidf = {}
-  for word, score in redis_client.zrevrange("doc:{}".format(rowid), 0, 99, withscores=True):
+  for word, score in redis_client.zrevrange("doc:{}".format(rowid), 0, -1, withscores=True):
     doc_score = redis_client.zscore("doc:all", word)
     if doc_score is None:
       logging.error("There seems to be no score for the word {}".format(word))
@@ -109,5 +121,5 @@ def calculate_tfidf(url):
     else:
       tfidf[word] = float(score) / doc_score
 
-  return tfidf
+  return dict(sorted(tfidf.items(), key=lambda x: -x[1])[0:limit])
 
