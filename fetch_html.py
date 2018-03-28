@@ -44,7 +44,7 @@ def parse_html(text):
     body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', keywords).lower()
 
   title = None
-  if soup.find('title'):
+  if soup.find('title') and soup.find('title').string:
     title = soup.find('title').string
     body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', title).lower()
   if soup.find('meta', property="og:title"):
@@ -90,7 +90,7 @@ def get_html(url):
 
   return parse_html(r.text)
 
-def get_headless_html(url, wait=2):
+def get_headless_html(url, wait=10):
   try:
     driver = webdriver.Chrome(chrome_options=options)
   except (FileNotFoundError, WebDriverException):
@@ -109,8 +109,10 @@ def get_headless_html(url, wait=2):
     return status
 
   logging.debug("Starting Selenium processing of {}".format(url))
+
   driver.get(url)
-  driver.implicitly_wait(wait)
+  driver.execute_script("setTimeout(function(){window.stop()}, %d)" % (wait * 1000))
+
   src = driver.page_source
   driver.quit()
   logging.debug("Finished Selenium processing of {}".format(url))
