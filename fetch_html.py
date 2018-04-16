@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup as BS
 import re
 import requests
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, TimeoutException
 
 class Status:
   NO_CONNECTION = 0
@@ -34,12 +34,12 @@ def parse_html(text):
   body = re.sub('[^A-Za-z0-9 ]+', ' ', body).lower()
 
   description = None
-  if soup.find('meta', property="og:description"):
+  if soup.find('meta', property="og:description") and soup.find('meta', property="og:description").get('content', None):
     description = soup.find('meta', property="og:description")['content']
     body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', description).lower()
 
   keywords = None
-  if soup.find('meta', attrs={"name":"keywords"}):
+  if soup.find('meta', attrs={"name":"keywords"}) and soup.find('meta', attrs={"name":"keywords"}).get('content', None):
     keywords = soup.find('meta', attrs={"name":"keywords"})['content']
     body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', keywords).lower()
 
@@ -47,7 +47,7 @@ def parse_html(text):
   if soup.find('title') and soup.find('title').string:
     title = soup.find('title').string
     body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', title).lower()
-  if soup.find('meta', property="og:title"):
+  if soup.find('meta', property="og:title") and soup.find('meta', property="og:title").get('content', None):
     title = soup.find('meta', property="og:title")['content']
     body += " " + re.sub('[^A-Za-z0-9 ]+', ' ', title).lower()
 
@@ -110,10 +110,16 @@ def get_headless_html(url, wait=10):
 
   logging.debug("Starting Selenium processing of {}".format(url))
 
-  driver.get(url)
-  driver.execute_script("setTimeout(function(){window.stop()}, %d)" % (wait * 1000))
+  try:
+    driver.get(url)
+    driver.execute_script("window.x = 1; setTimeout(function(){window.stop(); window.x = 2;}, %d)" % (wait * 1000))
 
-  src = driver.page_source
+    src = driver.page_source
+    print(driver.execute_script("return window.x"))
+  except TimeoutException:
+    logging.exception("Falling back to Requests because selenium timed out")
+    return get_html(url)
+
   driver.quit()
   logging.debug("Finished Selenium processing of {}".format(url))
 
