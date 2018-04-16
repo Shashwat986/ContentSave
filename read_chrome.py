@@ -2,6 +2,7 @@ import sqlite3
 import os
 import sys
 import logging
+import json
 from shutil import copyfile
 from datetime import datetime, timedelta
 
@@ -75,4 +76,95 @@ def get_links(start_time = None, limit = 5, offset = 0,
   logging.debug("Finishing")
   conn.close()
 
+  return rows
+
+def get_bookmarks(start_time = None, limit = 5, offset = 0,
+                  bookmark_file_path = None,
+                  sorted_by_time = True,
+                  force_copy = False):
+
+  # If there is no start_time provided, defaults to 1 year ago
+  if start_time is None:
+    start_time = (datetime.now() - timedelta(365)).timestamp()
+  elif type(start_time) is datetime:
+    start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
+
+  # TODO: Make this OS-Specific
+  if bookmark_file_path is None:
+    bookmark_file_path = os.path.expanduser('~/Library/Application Support/Google/Chrome/Default/Bookmarks')
+
+  if not os.path.isfile(bookmark_file_path):
+    raise IOError("File doesn't exist")
+
+  data = None
+  try:
+    data = json.loads(open(bookmark_file_path).read())
+  except json.decoder.JSONDecodeError:
+    raise IOError("File format incorrect")
+
+  if 'roots' not in data:
+    raise IOError("Unable to understand file")
+
+  rows = []
+  nodes = []
+
+  for key in ['bookmark_bar', 'other']:
+    if key in data['roots']:
+      nodes.append(data['roots'][key])
+
+  while True:
+    try:
+      # This is currently DFS
+      # Change to `nodes.pop(0)` for BFS
+      elem = nodes.pop()
+    except IndexError:
+      break
+
+    if elem['type'] == 'folder' and 'children' in elem:
+      for child in elem['children']:
+        nodes.append(child)
+    elif 'url' in elem:
+      # Fetch time
+      time = int(elem.get('date_added', 0))
+      if 'date_modified' in elem:
+        time = int(elem.get('date_modified'))
+
+      if time == 0:
+        logging.warning("Time not found for a bookmark")
+        continue
+
+      time = from_google_time(time)
+
+      if time <= start_time:
+        continue
+
+      # If we're returning a fixed number of items in bookmark file order
+      if (not sorted_by_time) and limit == 0:
+        # If we have already fetched `limit` items
+        break
+
+      if (not sorted_by_time) and offset > 0:
+        # Bypass `offset` items
+        offset -= 1
+      else:
+        rows.append({
+          "url": elem['url'],
+          "title": elem.get('name'),
+          "time": time,
+          "datetime": datetime.utcfromtimestamp(time)
+        })
+
+        if (not sorted_by_time):
+          # We have selected an item. Reduce `limit`
+          limit -= 1
+    else:
+      logging.warning("Different node type: {}".format(elem))
+      pass
+
+  #end while
+
+  if sorted_by_time:
+    rows = sorted(rows, key=lambda x: x['time'])[offset : offset+limit]
+
+  logging.debug("Finishing")
   return rows

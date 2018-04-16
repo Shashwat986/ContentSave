@@ -1,12 +1,13 @@
 import logging
-from read_chrome import get_links
+from read_chrome import get_bookmarks
 from fetch_html import get_headless_html, Status
 from update_data import update_databases, calculate_tfidf, check_link_exists
 from search import get_metadata
 from model import redis_client, test_connections
 
 def fetch_and_parse_links(limit = 5, force = False):
-  fetched = redis_client.get('last_fetch_time')
+  #fetched = redis_client.get('last_fetch_time')
+  fetched = redis_client.get('last_bookmark_fetch_time')
 
   if fetched:
     try:
@@ -15,7 +16,7 @@ def fetch_and_parse_links(limit = 5, force = False):
       fetched = None
 
   count = 0
-  for link in get_links(fetched, limit):
+  for link in get_bookmarks(fetched, limit):
     logging.info("Fetching {}".format(link['url']))
 
     exists, _ = check_link_exists(link['url'])
@@ -36,7 +37,7 @@ def fetch_and_parse_links(limit = 5, force = False):
         logging.debug("Updating DB Values")
         update_databases(url_object, link, force, True)
 
-    redis_client.set('last_fetch_time', link['time'])
+    redis_client.set('last_bookmark_fetch_time', link['time'])
     count += 1
 
     print("{:>5} processed so far".format(count))
@@ -54,6 +55,6 @@ if __name__ == "__main__":
     exit(1)
 
   #fetch_tfidf("http://docs.peewee-orm.com/en/latest/peewee/models.html")
-  count = fetch_and_parse_links(100)
+  count = fetch_and_parse_links(10000)
   print ("URLs Processed: ", count)
   #get_metadata()
