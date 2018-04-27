@@ -65,12 +65,16 @@ def check_url(url):
     status = Status(Status.URL_INCORRECT)
 
     socket.create_connection((urlparse(url).netloc, 80))
-    assert requests.head(url).status_code < 400
+    assert requests.head(url, timeout=2).status_code < 400
     status = Status(Status.ALL_OK)
 
     return status
   except (AssertionError, OSError) as e:
     logging.info("Unable to find URL {}. Error:".format(url))
+    logging.info(e)
+    return status
+  except requests.exceptions.Timeout as e:
+    logging.info("Unable to make HEAD request")
     logging.info(e)
     return status
   except Exception as e:
@@ -93,6 +97,7 @@ def get_html(url):
 def get_headless_html(url, wait=10):
   try:
     driver = webdriver.Chrome(chrome_options=options)
+    driver.set_page_load_timeout(wait)
   except (FileNotFoundError, WebDriverException):
     # ChromeDriver is not available
     logging.warning ("""
