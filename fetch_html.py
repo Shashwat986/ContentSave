@@ -64,7 +64,7 @@ def check_url(url):
     socket.create_connection(("www.google.com", 80))
     status = Status(Status.URL_INCORRECT)
 
-    socket.create_connection((urlparse(url).netloc, 80))
+    socket.create_connection((urlparse(url).netloc, 80), timeout = 20)
     assert requests.head(url, timeout=2).status_code < 400
     status = Status(Status.ALL_OK)
 
@@ -94,7 +94,7 @@ def get_html(url):
 
   return parse_html(r.text)
 
-def get_headless_html(url, wait=10):
+def get_headless_html(url, wait = 30):
   try:
     driver = webdriver.Chrome(chrome_options=options)
     driver.set_page_load_timeout(wait)
