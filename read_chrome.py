@@ -5,6 +5,7 @@ import logging
 import json
 from shutil import copyfile
 from datetime import datetime, timedelta
+import requests
 
 # Convert from UNIX timestamp to Google's time
 def to_google_time(timestamp):
@@ -15,16 +16,16 @@ def from_google_time(time):
   epoch = (time/1_000_000) - (datetime(1970, 1, 1) - datetime(1601, 1, 1)).total_seconds()
   return epoch
 
-def get_links(start_time = None, limit = 5, offset = 0,
-              history_file_path = None,
-              ascending = True,
-              force_copy = False):
-
+def get_links(start_time = None, limit = 5, offset = 0, **options):
   # If there is no start_time provided, defaults to 1 year ago
   if start_time is None:
     start_time = (datetime.now() - timedelta(365)).timestamp()
   elif type(start_time) is datetime:
     start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
+
+  history_file_path = options.get('history_file_path', None)
+  ascending = options.get('ascending', True)
+  force_copy = options.get('force_copy', False)
 
   # TODO: Make this OS-Specific
   if history_file_path is None:
@@ -78,16 +79,16 @@ def get_links(start_time = None, limit = 5, offset = 0,
 
   return rows
 
-def get_bookmarks(start_time = None, limit = 5, offset = 0,
-                  bookmark_file_path = None,
-                  sorted_by_time = True,
-                  force_copy = False):
-
+def get_bookmarks(start_time = None, limit = 5, offset = 0, **options):
   # If there is no start_time provided, defaults to 1 year ago
   if start_time is None:
     start_time = (datetime.now() - timedelta(365)).timestamp()
   elif type(start_time) is datetime:
     start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
+
+  bookmark_file_path = options.get('bookmark_file_path', None)
+  sorted_by_time = options.get('sorted_by_time', True)
+  force_copy = options.get('force_copy', False)
 
   # TODO: Make this OS-Specific
   if bookmark_file_path is None:
@@ -167,4 +168,67 @@ def get_bookmarks(start_time = None, limit = 5, offset = 0,
     rows = sorted(rows, key=lambda x: x['time'])[offset : offset+limit]
 
   logging.debug("Finishing")
+  return rows
+
+def get_feedly(start_time = None, limit = 5, offset = 0, **options):
+  # If there is no start_time provided, defaults to 1 year ago
+  if start_time is None:
+    start_time = (datetime.now() - timedelta(365)).timestamp()
+  elif type(start_time) is datetime:
+    start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
+
+  # TODO
+  streamId = ""
+  authHeader = ""
+
+  logging.info("Making HTTP Request")
+
+  r = requests.get("http://cloud.feedly.com/v3/streams/contents", {
+    "streamId" : streamId,
+    "ranked" : "oldest",
+    "newerThan" : int(start_time * 1000) + 1, # +1 because we want strictly greater than
+    "count" : limit + offset
+  }, headers = {
+    "Authorization" : authHeader
+  })
+
+  rows = []
+  if r.status_code == 200:
+    for elem in r.json()['items'][-limit:]:
+      logging.info(elem)
+      time = int(elem.get('actionTimestamp', 0)) / 1000
+
+      url = elem.get('url', None)
+      if url is None:
+        url = elem.get('canonical', [{}])[0].get('href', None)
+      if url is None:
+        url = elem.get('canonicalUrl', None)
+      if url is None:
+        url = elem.get('alternate', [{}])[0].get('href')
+
+      # Not technically correct, but fallback
+      origin = False
+      if url is None:
+        origin = True
+        url = elem.get('origin', {}).get('htmlUrl', None)
+      if url is None:
+        origin = True
+        url = elem.get('originId', None)
+
+      if url is None: continue
+
+      if origin:
+        logging.warning("Unable to find URL. Using Origin URL")
+
+      rows.append({
+        "url": url,
+        "title": elem.get('title'),
+        "time": time,
+        "datetime": datetime.utcfromtimestamp(time)
+      })
+  else:
+    logging.error("Request failed.")
+    logging.error(r.text)
+
+
   return rows

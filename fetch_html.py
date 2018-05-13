@@ -88,7 +88,12 @@ def get_html(url):
   if status.status != Status.ALL_OK:
     return status
 
-  r = requests.get(url)
+  try:
+    r = requests.get(url)
+  except Exception as e:
+    logging.exception("Unknown Error")
+    return Status(Status.URL_INCORRECT)
+
   if r.status_code != 200:
     logging.warning("Status Code was not 200 for {}.".format(url))
 
@@ -124,8 +129,12 @@ def get_headless_html(url, wait = 30):
   except TimeoutException:
     logging.exception("Falling back to Requests because selenium timed out")
     return get_html(url)
+  except Exception as e:
+    logging.exception("Unknown Error")
+    return Status(Status.URL_INCORRECT)
+  finally:
+    driver.quit()
 
-  driver.quit()
   logging.debug("Finished Selenium processing of {}".format(url))
 
   return parse_html(src)
