@@ -178,8 +178,8 @@ def get_feedly(start_time = None, limit = 5, offset = 0, **options):
     start_time = (start_time - datetime(1970, 1, 1)).total_seconds()
 
   # TODO
-  streamId = ""
-  authHeader = ""
+  streamId = "user/fee9ca94-a640-4dd0-93a3-9f6fbfbb85e5/tag/global.saved"
+  authHeader = "Az3LMscr9j9aXAzSsN-UNG6FMXrmJp6n9Z399dZFJ3XUoUsWjkmyso8f3ost9O0Yv1rm6VlW5rJeGhZaQr6V1YUWAYBu5XfO-XQD_31F7EfgMVMucqQwOjdPH7iL-PeHYoTYAKJR39f2S5Dgyw5iQSv6bBTwj_mbwSvgkmWPk7OZowKchM9AyfqA3EDDzz9WvSUCrRmGB3Uwj561YddQcPrCYF0dbU6X3pg8esI_9EMdrFot-A6aV7BKvFj1qQ:feedlydev"
 
   logging.info("Making HTTP Request")
 
